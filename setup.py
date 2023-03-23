@@ -34,7 +34,8 @@ class CompileProto(Command):
             if "editable_wheel" in self.distribution.commands:
                 self.build_lib = "python"
             else:
-                self.set_undefined_options("build", ("build_lib", "build_lib"))  # Default to the output of the build command
+                # Default to the output location of the build command:
+                self.set_undefined_options("build", ("build_lib", "build_lib"))
         if self.proto_vers is None:
             self.proto_vers = os.getenv("ARCTICDB_PROTOC_VERS", "".join(self._PROTOBUF_TO_GRPC_VERSION)).strip()
 
@@ -62,7 +63,7 @@ class CompileProto(Command):
                 "--disable-pip-version-check",
                 "--target=" + pythonpath,
                 "grpcio-tools" + grpc_version,
-                f"protobuf=={proto_ver}.*"
+                f"protobuf=={proto_ver}.*",
             ]
         )
         env = {**os.environ, "PYTHONPATH": pythonpath, "PYTHONNOUSERSITE": "1"}
@@ -104,7 +105,6 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         dest = os.path.abspath(self.get_ext_fullpath(ext.name))
         print(f"Destination: {dest}")
-        install_args = [f"-DCMAKE_INSTALL_PREFIX={os.path.dirname(dest)}"]
 
         cmake = shutil.which("cmake")  # Windows safe
         if not cmake and platform.system() != "Windows":
@@ -118,12 +118,22 @@ class CMakeBuild(build_ext):
         search = f"cpp/out/{preset}-build"
         candidates = glob.glob(search)
         if not candidates:
-            common_args = [
+            if preset == "*":
+                suffix = "-debug" if self.debug else "-release"
+                preset = ("windows-cl" if platform.system() == "Windows" else platform.system().lower()) + suffix
+            print(
+                f"Did not find build directory with '{search}'. Will configure and build using cmake preset {preset}",
+                file=sys.stderr,
+            )
+            cmd = [
+                cmake,
                 "-DTEST=NO",
                 f"-DBUILD_PYTHON_VERSION={sys.version_info[0]}.{sys.version_info[1]}",
-                *install_args,
+                f"-DCMAKE_INSTALL_PREFIX={os.path.dirname(dest)}",
+                "--preset",
+                preset,
             ]
-            self._configure_cmake_using_preset(cmake, common_args, preset, search)
+            subprocess.check_call(cmd, cwd="cpp")
             candidates = glob.glob(search)
 
         assert len(candidates) == 1, f"Specify {env_var} or use a single build directory. {search}={candidates}"
@@ -133,16 +143,6 @@ class CMakeBuild(build_ext):
         )
 
         assert os.path.exists(dest), f"No output at {dest}, but we didn't get a bad return code from CMake?"
-
-    def _configure_cmake_using_preset(self, cmake, common_args, preset, search):
-        if preset == "*":
-            suffix = "-debug" if self.debug else "-release"
-            preset = ("windows-cl" if platform.system() == "Windows" else platform.system().lower()) + suffix
-        print(
-            f"Did not find build directory with '{search}'. Will configure and build using cmake preset {preset}",
-            file=sys.stderr,
-        )
-        subprocess.check_call([cmake, *common_args, "--preset", preset], cwd="cpp")
 
 
 if __name__ == "__main__":
