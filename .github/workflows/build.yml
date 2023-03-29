@@ -44,11 +44,12 @@ jobs:
       linux_matrix: >-
         {"os":"linux", "distro":"\"ubuntu-latest\"", "pytest_distro": "${{vars.PYTEST_DISTRO_LINUX}}",
           "cmake_preset_prefix":"linux", "cibw_format":"cp3{0}-manylinux_x86_64",
-          "build_dir": "cpp/out", "do_not_archive": ["*.so", "*.[ao]", "vcpkg_installed"]}
+          "build_dir": "cpp/out", "symbols": "*.gz", "do_not_archive": ["*.so", "*.[ao]", "vcpkg_installed"]}
       windows_matrix: >-
         {"os":"windows", "distro":"\"windows-latest\"", "pytest_distro": "${{vars.PYTEST_DISTRO_WINDOWS}}",
           "cmake_preset_prefix":"windows-cl", "cibw_format":"cp3{0}-win_amd64",
-          "build_dir": "C:\\out", "do_not_archive": ["*.lib", "*.ilk", "*.pyd", "*.dll", "CMakeFiles/*.dir", "vcpkg_installed"]}
+          "build_dir": "C:\\out", "symbols": "*.pdb",
+          "do_not_archive": ["*.lib", "*.ilk", "*.pyd", "*.dll", "CMakeFiles/*.dir", "vcpkg_installed"]}
 
   cibw_docker_image:
     needs: [common_config]

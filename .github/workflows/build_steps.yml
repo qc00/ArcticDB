@@ -22,6 +22,7 @@ jobs:
         cibw_format: [0] # Full list https://cibuildwheel.readthedocs.io/en/stable/options/#build-skip
         envs: [0]
         build_dir: [0]
+        symbols: [0] # Glob for symbol symbol files. Used for including in follower builds and exclusion on others.
         do_not_archive: [0]
         exclude:
             - os: 0
@@ -154,7 +155,9 @@ jobs:
           retention-days: ${{inputs.job_type == 'cpp-tests' && 7 || 90}}
           # On Windows, exclusions like "!**/*.ext" are prefixed with a drive letter (D:\) of the current working dir
           # before matching. This breaks since we moved the build_dir to C:. Work around by templating exclusions:
-          path: ${{matrix.build_dir}}/*-build ${{env._exclusion}}${{join(matrix.do_not_archive, env._exclusion)}}
+          path: ${{matrix.build_dir}}/*-build
+            ${{env._exclusion}}${{inputs.job_type == 'follower' && 'nofile' || matrix.symbols}}
+            ${{env._exclusion}}${{join(matrix.do_not_archive, env._exclusion)}}
 
     outputs:
       manylinux_image: ${{env.manylinux_image}}

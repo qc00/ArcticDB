@@ -137,10 +137,7 @@ class CMakeBuild(build_ext):
             candidates = glob.glob(search)
 
         assert len(candidates) == 1, f"Specify {env_var} or use a single build directory. {search}={candidates}"
-        subprocess.check_call([cmake, "--build", candidates[0], "--target", ext.name])
-        subprocess.check_call(
-            [cmake, *install_args, "-DCOMPONENT=Python_Lib", "-P", candidates[0] + "/cmake_install.cmake"]
-        )
+        subprocess.check_call([cmake, "--build", candidates[0], "--target", "install_" + ext.name])
 
         assert os.path.exists(dest), f"No output at {dest}, but we didn't get a bad return code from CMake?"
 

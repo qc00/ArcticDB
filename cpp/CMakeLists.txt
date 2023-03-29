@@ -12,14 +12,17 @@ if(WIN32)
     add_compile_definitions(HAVE_SNPRINTF)
     add_compile_definitions(NOMINMAX)
 
+    # We always generate the debug info on Windows since those are not in the final .dll.
+    # sccache needs the /Z7 format, but the linker will still produce .pdb files.
     # Guide to MSVC compilation warnings https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-c4000-through-c4199?view=msvc-170
-    set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /w /GR /bigobj /EHsc /w /wd4244 /wd4267")
+    set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /GR /EHsc /bigobj /Z7 /w /wd4244 /wd4267")
     set(CMAKE_CXX_FLAGS_RELEASE "/MT /DNDEBUG")
-    set(CMAKE_CXX_FLAGS_DEBUG "/MTd /Zi /RTC1")
+    set(CMAKE_CXX_FLAGS_DEBUG "/MTd /RTC1")
 else()
     set(CMAKE_CXX_FLAGS "-Wall -Wextra")
     set(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3") # TODO: why is -DNDEBUG from the defaults excluded?
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ggdb")
 endif()
 
 IF(DEFINED ENV{CMAKE_BUILD_TYPE})
@@ -43,7 +46,7 @@ if(NOT DEFINED ENV{CMAKE_BUILD_PARALLEL_LEVEL})
     if(${_proc_count} LESS 2)
         message(WARNING "Failed to determine the available processor count. Assuming you have at least 2 cores. \
             Please set the CMAKE_BUILD_PARALLEL_LEVEL environment variable.")
-        set(ENV{CMAKE_BUILD_PARALLEL_LEVEL 2)
+        set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} 2)
     else()
         cmake_host_system_information(RESULT _physical_mb QUERY TOTAL_PHYSICAL_MEMORY)
         math(EXPR _needed_mb "${_proc_count} * 1500")
@@ -51,7 +54,7 @@ if(NOT DEFINED ENV{CMAKE_BUILD_PARALLEL_LEVEL})
             message(WARNING "We recommend 1500MB of physical RAM per processor core. We found ${_proc_count} cores and\
                 ${_physical_mb}MB of RAM. Use the CMAKE_BUILD_PARALLEL_LEVEL environment variable to avoid thrashing.")
         endif()
-        set(ENV{CMAKE_BUILD_PARALLEL_LEVEL ${_proc_count})
+        set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} ${_proc_count})
     endif()
 endif()
 
