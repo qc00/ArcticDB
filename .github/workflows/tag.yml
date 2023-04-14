@@ -25,10 +25,10 @@ jobs:
     env:
       BASH_FUNC_tag_and_push%%: |-
         () {
-          set -x
           sed -ri '/^\[metadata]/, /^\[/ s/^version[[:blank:]]*=.*/version = '$2/ setup.cfg
           git add setup.cfg
           git diff --cached --exit-code || git commit -m "$1 v$2"
+          set -x
           git push origin HEAD:$3 $4
         }
     steps:
@@ -43,7 +43,10 @@ jobs:
           submodules: recursive
 
       - name: Tag required version
-        run: tag_and_push "Tagging" ${{inputs.version}} refs/tags/v${{inputs.version}} ${{inputs.overwrite && '-f' || ''}}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "arcticdb@man.com"
+          tag_and_push "Tagging" ${{inputs.version}} refs/tags/v${{inputs.version}} ${{inputs.overwrite && '-f' || ''}}
 
       - name: Bump ${{github.ref_name}} to the next version
         if: inputs.next_version

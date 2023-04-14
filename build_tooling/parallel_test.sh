@@ -8,7 +8,7 @@ echo Saving results to ${TEST_OUTPUT_DIR:="$(realpath "$tooling_dir/../cpp/out")
 [[ -e ${PARALLEL_TEST_ROOT:=/tmp/parallel_test} ]] && rm -rf $PARALLEL_TEST_ROOT
 splits=${TEST_PARALLELISM:-${CMAKE_BUILD_PARALLEL_LEVEL:-`nproc || echo 2`}}
 
-catch=`which catchsegv >/dev/null || echo`
+catch=`which catchsegv &>/dev/null || echo`
 
 function worker() {
     group=${1:?Must pass the group id argument}
@@ -22,8 +22,7 @@ function worker() {
     # Build a directory that's just the test assets, so can't access other Python source not in the wheel
     # Each test also get a separate directory since there's a mystery lock somewhere preventing concurrent runs (even)
     # from different Python processes
-    TMP=$new_root/_tmp
-    mkdir -p $TMP
+    mkdir -p $new_root
     MSYS=winsymlinks:nativestrict ln -s "$(realpath "$tooling_dir/../python/tests")" $new_root/
     cd $new_root
 
