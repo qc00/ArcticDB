@@ -155,7 +155,7 @@ jobs:
       matrix: ${{needs.common_config.outputs.windows_matrix}}
 
   publish:
-    needs: [common_config, leader-cpp-test-linux, leader-cpp-test-windows, follower-linux, follower-windows]
+    needs: [common_config, follower-linux, follower-windows]
     if: needs.common_config.outputs.pypi_publish && needs.common_config.outputs.publish_env
     uses: ./.github/workflows/publish.yml
     secrets: inherit
@@ -164,7 +164,7 @@ jobs:
       environment: ${{needs.common_config.outputs.publish_env}}
 
   docs:
-    needs: [common_config, follower-windows, follower-linux]
+    needs: [common_config, follower-linux]
     uses: ./.github/workflows/docs.yml
     secrets: inherit
     with:
