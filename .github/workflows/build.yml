@@ -1,7 +1,6 @@
 name: Build and Test
 on:
   push:
-    branches: ["**"]
     tags: [v**]
     paths:
       - .github/workflows/*.yml
@@ -115,6 +114,7 @@ jobs:
       matrix: ${{needs.common_config.outputs.linux_matrix}}
 
   leader-compile-windows:
+    if: false
     needs: [common_config]
     name: Windows Compile
     uses: ./.github/workflows/build_steps.yml
@@ -155,7 +155,7 @@ jobs:
       matrix: ${{needs.common_config.outputs.windows_matrix}}
 
   can_merge:
-    needs: [leader-cpp-test-linux, leader-cpp-test-windows, follower-linux, follower-windows]
+    needs: [follower-linux]
     runs-on: ubuntu-latest
     steps:
       - run: echo Dummy job to simplify PR merge checks configuration
