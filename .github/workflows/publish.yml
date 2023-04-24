@@ -41,12 +41,17 @@ jobs:
                   const itemsResponse = await client.getContainerItems(artifact.name, artifact.fileContainerResourceUrl);
                   // Must match "symbols" in build.yml
                   const symbols_ext = artifact.name.search('windows') >= 0 ? ".pdb" : ".gz";
-                  core.debug(`symbols_ext={symbols_ext}`);
+                  core.debug(`symbols_ext=${symbols_ext}`);
                   const items = itemsResponse.value.filter(i => i.path.endsWith(symbols_ext));
-                  const downloadSpecs = ds.getDownloadSpecification(artifact.name, items, cwd, true);
-                  core.debug(`downloadSpecs={JSON.stringify(downloadSpecs)}`);
-                  await createDirectoriesForArtifact(downloadSpecs.directoryStructure);
-                  await client.downloadSingleArtifact(downloadSpecs.filesToDownload);
+                  if (items.length < 1) {
+                    core.error(`${artifact.name} does not have any ${symbols_ext} file.
+                  Please locate the debug symbols and archive them to aid future support.`);
+                  } else {
+                    const downloadSpecs = ds.getDownloadSpecification(artifact.name, items, cwd, true);
+                    core.debug(`downloadSpecs={JSON.stringify(downloadSpecs)}`);
+                    await createDirectoriesForArtifact(downloadSpecs.directoryStructure);
+                    await client.downloadSingleArtifact(downloadSpecs.filesToDownload);
+                  }
                 } else {
                   console.log(`Ignoring ${artifact.name}`);
                 }

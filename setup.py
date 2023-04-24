@@ -150,12 +150,19 @@ class CMakeBuild(build_ext):
         assert os.path.exists(dest), f"No output at {dest}, but we didn't get a bad return code from CMake?"
 
 
+def readme():
+    with open("README.md") as f:
+        return f.read()
+
+
 if __name__ == "__main__":
     setup(
         ext_modules=[CMakeExtension("arcticdb_ext")],
         package_dir={"": "python"},
         packages=find_packages(where="python", exclude=["tests", "tests.*"])
         + find_namespace_packages(where="python", include=["arcticdb.proto.*"]),
+        long_description=readme(),
+        long_description_content_type='text/markdown',
         cmdclass=dict(
             build_ext=CMakeBuild,
             protoc=CompileProto,
